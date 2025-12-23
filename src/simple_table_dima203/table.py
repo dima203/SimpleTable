@@ -15,6 +15,8 @@ class Table:
         self.max_table_width = None
         self.min_table_width = None
 
+        self.none_format = ''
+
         self.vertical_character = "|"
         self.horizontal_character = "="
         self.top_junction_character = "+"
@@ -52,7 +54,7 @@ class Table:
             self.__get_top_delimiter_string(),
             self.__get_header_string(),
             self.__get_delimiter_string(),
-            *self.__get_row_strings(),
+            *self.__get_table_strings(),
             self.__get_bottom_delimiter_string(),
         ]
         return "\n".join(strings)
@@ -97,20 +99,20 @@ class Table:
             + self.vertical_character
         )
 
-    def __get_row_strings(self) -> list[str]:
+    def __get_table_strings(self) -> list[str]:
         columns_length = self.__get_formated_columns_length()
         strings = []
         for row in self.__data:
             strings.append(
                 "".join(
-                    f"{self.vertical_character}{str(row[key]): {self.align[key]}{columns_length[key]}}"
+                    f"{self.vertical_character}{str(row[key]) if row[key] is not None else self.none_format: {self.align[key]}{columns_length[key]}}"
                     for key in row
                 )
                 + self.vertical_character
             )
         return strings
 
-    def __create_row_string(self, length: int) -> str:
+    def __get_row_strings(self, ) -> list[str]:
         pass
 
     def __get_formated_columns_length(self) -> dict[str, int]:
