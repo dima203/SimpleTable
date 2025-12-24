@@ -3,15 +3,16 @@ from typing import Any
 
 
 class Table:
-    def __init__(self, *, headers: list[str] | None = None) -> None:
+    def __init__(self, *, keys: list[str] | None = None) -> None:
         self.__data: list[dict[str, Any]] = []
 
-        self.headers: list[str] = [] if headers is None else headers
+        self.keys: list[str] = [] if keys is None else keys
+        self.key_alias: dict[str, str] = {key: key for key in self.keys}
 
-        self.align = {key: "^" for key in headers}
+        self.align = {key: "^" for key in keys}
 
-        self.min_width: dict[str, int | None] = {key: None for key in headers}
-        self.max_width: dict[str, int | None] = {key: None for key in headers}
+        self.min_width: dict[str, int | None] = {key: None for key in keys}
+        self.max_width: dict[str, int | None] = {key: None for key in keys}
 
         self.max_table_width = None
         self.min_table_width = None
@@ -20,7 +21,7 @@ class Table:
         self.wrap = True
 
         self.vertical_character = "|"
-        self.horizontal_character = "="
+        self.horizontal_character = "-"
         self.top_junction_character = "+"
         self.top_left_junction_character = "+"
         self.top_right_junction_character = "+"
@@ -35,12 +36,14 @@ class Table:
         self,
         column_name: str,
         *,
+        alias: str = None,
         default: Any = None,
         align: str = "^",
         min_width: int | None = None,
         max_width: int | None = None,
     ) -> None:
-        self.headers.append(column_name)
+        self.keys.append(column_name)
+        self.key_alias[column_name] = column_name if alias is None else alias
         self.align[column_name] = align
         self.min_width[column_name] = min_width
         self.max_width[column_name] = max_width
@@ -49,12 +52,12 @@ class Table:
             row[column_name] = default
 
     def add_row(self, row: list[Any]) -> None:
-        self.__data.append(dict(zip(self.headers, row)))
+        self.__data.append(dict(zip(self.keys, row)))
 
     def __str__(self) -> str:
         strings = [
             self.__get_top_delimiter_string(),
-            self.__get_header_string(),
+            *self.__get_header_string(),
             self.__get_delimiter_string(),
             *self.__get_table_strings(),
             self.__get_bottom_delimiter_string(),
@@ -91,15 +94,8 @@ class Table:
             + self.bottom_right_junction_char
         )
 
-    def __get_header_string(self) -> str:
-        columns_length = self.__get_formated_columns_length()
-        return (
-            "".join(
-                f"{self.vertical_character}{key: {self.align[key]}{columns_length[key]}}"
-                for key in self.headers
-            )
-            + self.vertical_character
-        )
+    def __get_header_string(self) -> list[str]:
+        return self.__get_row_strings(self.key_alias)
 
     def __get_table_strings(self) -> list[str]:
         strings = []
@@ -196,7 +192,7 @@ class Table:
 
     def __get_max_columns_length(self) -> dict[str, int]:
         return {
-            key: self.__get_max_length_for_column(key) for key in self.headers
+            key: self.__get_max_length_for_column(key) for key in self.keys
         }
 
     def __get_max_length_for_column(self, column_name: str) -> int:
@@ -219,13 +215,13 @@ class Table:
     def __get_raw_strings(self) -> list[str]:
         strings = []
         header_string = ""
-        for header in self.headers:
+        for header in self.keys:
             header_string += f"{self.vertical_character}{header}"
         header_string += self.vertical_character
         strings.append(header_string)
         for row in self.__data:
             string = ""
-            for header in self.headers:
+            for header in self.keys:
                 string += f"{self.vertical_character}{row[header]}"
             string += self.vertical_character
             strings.append(string)
