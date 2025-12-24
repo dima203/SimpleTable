@@ -1,36 +1,28 @@
 import textwrap
 from typing import Any
 
+from .style import TableStyle, DEFAULT
+
 
 class Table:
-    def __init__(self, *, keys: list[str] | None = None) -> None:
-        self.__data: list[dict[str, Any]] = []
+    def __init__(self, *, keys: list[str] | None = None, style: TableStyle = DEFAULT) -> None:
+        self.__data: list[dict[str, Any] | str] = []
 
         self.keys: list[str] = [] if keys is None else keys
         self.key_alias: dict[str, str] = {key: key for key in self.keys}
 
-        self.align = {key: "^" for key in keys}
+        self.align: dict[str, str] = {key: "^" for key in keys}
 
         self.min_width: dict[str, int | None] = {key: None for key in keys}
         self.max_width: dict[str, int | None] = {key: None for key in keys}
 
-        self.max_table_width = None
-        self.min_table_width = None
+        self.max_table_width: int | None = None
+        self.min_table_width: int | None = None
 
-        self.none_format = ''
-        self.wrap = True
+        self.none_format: str | None = ""
+        self.wrap: bool | None = True
 
-        self.vertical_character = "|"
-        self.horizontal_character = "-"
-        self.top_junction_character = "+"
-        self.top_left_junction_character = "+"
-        self.top_right_junction_character = "+"
-        self.left_junction_character = "+"
-        self.right_junction_character = "+"
-        self.junction_character = "+"
-        self.bottom_junction_char = "+"
-        self.bottom_left_junction_char = "+"
-        self.bottom_right_junction_char = "+"
+        self.style: TableStyle = style
 
     def add_column(
         self,
@@ -54,6 +46,9 @@ class Table:
     def add_row(self, row: list[Any]) -> None:
         self.__data.append(dict(zip(self.keys, row)))
 
+    def add_delimiter(self) -> None:
+        self.__data.append("-")
+
     def __str__(self) -> str:
         strings = [
             self.__get_top_delimiter_string(),
@@ -67,31 +62,31 @@ class Table:
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-            self.top_left_junction_character
-            + self.top_junction_character.join(
-                self.horizontal_character * length for length in columns_length
+            self.style.top_left_junction_character
+            + self.style.top_junction_character.join(
+                self.style.horizontal_character * length for length in columns_length
             )
-            + self.top_right_junction_character
+            + self.style.top_right_junction_character
         )
 
     def __get_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-            self.left_junction_character
-            + self.junction_character.join(
-                self.horizontal_character * length for length in columns_length
+            self.style.left_junction_character
+            + self.style.junction_character.join(
+                self.style.horizontal_character * length for length in columns_length
             )
-            + self.right_junction_character
+            + self.style.right_junction_character
         )
 
     def __get_bottom_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-            self.bottom_left_junction_char
-            + self.bottom_junction_char.join(
-                self.horizontal_character * length for length in columns_length
+            self.style.bottom_left_junction_char
+            + self.style.bottom_junction_char.join(
+                self.style.horizontal_character * length for length in columns_length
             )
-            + self.bottom_right_junction_char
+            + self.style.bottom_right_junction_char
         )
 
     def __get_header_string(self) -> list[str]:
@@ -100,7 +95,10 @@ class Table:
     def __get_table_strings(self) -> list[str]:
         strings = []
         for row in self.__data:
-            strings.extend(self.__get_row_strings(row))
+            if row == "-":
+                strings.append(self.__get_delimiter_string())
+            else:
+                strings.extend(self.__get_row_strings(row))
         return strings
 
     def __get_row_strings(self, row: dict[str, Any]) -> list[str]:
@@ -113,10 +111,10 @@ class Table:
             for key, data in row_data_strings.items():
                 index = len(data) - max_data_length + i
                 if index >= 0:
-                    string += f"{self.vertical_character}{data[index]: {self.align[key]}{columns_length[key]}}"
+                    string += f"{self.style.vertical_character}{data[index]: {self.align[key]}{columns_length[key]}}"
                 else:
-                    string += f"{self.vertical_character}{"": {self.align[key]}{columns_length[key]}}"
-            string += self.vertical_character
+                    string += f"{self.style.vertical_character}{"": {self.align[key]}{columns_length[key]}}"
+            string += self.style.vertical_character
             strings.append(string)
         return strings
 
@@ -198,7 +196,7 @@ class Table:
     def __get_max_length_for_column(self, column_name: str) -> int:
         max_data_length = len(
             str(
-                max(self.__data, key=lambda row: len(str(row[column_name])))[
+                max(self.__data, key=lambda row: len(str(row[column_name])) if row != "-" else 0)[
                     column_name
                 ]
             )
@@ -216,13 +214,13 @@ class Table:
         strings = []
         header_string = ""
         for header in self.keys:
-            header_string += f"{self.vertical_character}{header}"
-        header_string += self.vertical_character
+            header_string += f"{self.style.vertical_character}{header}"
+        header_string += self.style.vertical_character
         strings.append(header_string)
         for row in self.__data:
             string = ""
             for header in self.keys:
-                string += f"{self.vertical_character}{row[header]}"
-            string += self.vertical_character
+                string += f"{self.style.vertical_character}{row[header]}"
+            string += self.style.vertical_character
             strings.append(string)
         return strings
