@@ -196,9 +196,10 @@ class Table:
     def __get_max_length_for_column(self, column_name: str) -> int:
         max_data_length = len(
             str(
-                max(self.__data, key=lambda row: len(str(row[column_name])) if row != "-" else 0)[
-                    column_name
-                ]
+                max(
+                    [row for row in self.__data if row != "-"],
+                    key=lambda row: len(str(row[column_name])) if row != "-" else 0
+                )[column_name]
             )
         )
         return (

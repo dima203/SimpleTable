@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "simple_table_dima203"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="dima203", email="gg3752901@gmail.com" },
 ]
