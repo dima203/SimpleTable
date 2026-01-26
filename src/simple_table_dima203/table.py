@@ -10,6 +10,7 @@ class Table:
 
         self.title: Any | None = None
         self.inline_title: Any | None = None
+        self.title_border: bool = False
         self.title_align: str = "^"
         self.inline_title_align: str = "^"
 
@@ -56,6 +57,7 @@ class Table:
 
     def __str__(self) -> str:
         strings = [
+            *self.__get_title_string(),
             self.__get_inline_title_string(),
             *self.__get_header_string(),
             self.__get_delimiter_string(),
@@ -64,6 +66,26 @@ class Table:
         ]
         return "\n".join(strings)
 
+    def __get_title_string(self) -> list[str]:
+        if self.title is None:
+            return []
+
+        columns_length = self.__get_formated_columns_length().values()
+        title_strings = []
+        for string in self.title.split("\n"):
+            title_strings.extend(self.__get_data_strings(string, sum(columns_length) + len(self.keys) - 1))
+
+        if self.title_border:
+            return [
+                self.__get_top_title_string(),
+                *(f"{self.style.vertical_character}"
+                f"{title_string: {self.title_align}{sum(columns_length)+len(self.keys)-1}}"
+                f"{self.style.vertical_character}" for title_string in title_strings)
+            ]
+        else:
+            return [*(f" {title_string: {self.title_align}{sum(columns_length)+len(self.keys)-1}} "
+                      for title_string in title_strings)]
+
     def __get_inline_title_string(self) -> str:
         if self.inline_title is None:
             return self.__get_top_delimiter_string()
@@ -71,7 +93,9 @@ class Table:
         delimiter_string = self.__get_top_delimiter_string()
         delimiter_string = list(delimiter_string)
 
-        if self.inline_title_align == "<":
+        if len(self.inline_title) > len(delimiter_string) - 4:
+            offset = 0
+        elif self.inline_title_align == "<":
             offset = 0
         elif self.inline_title_align == "^":
             offset = (len(delimiter_string) - 4 - len(self.inline_title)) // 2
@@ -83,6 +107,9 @@ class Table:
             )
 
         for i, char in enumerate(self.inline_title):
+            if i + 2 + offset >= len(delimiter_string) - 2:
+                break
+
             delimiter_string[i + 2 + offset] = char
 
         return ''.join(delimiter_string)
@@ -90,11 +117,21 @@ class Table:
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-            self.style.top_left_junction_character
+            (self.style.left_junction_character if self.title_border else self.style.top_left_junction_character)
             + self.style.top_junction_character.join(
                 self.style.horizontal_character * length for length in columns_length
             )
-            + self.style.top_right_junction_character
+            + (self.style.right_junction_character if self.title_border else self.style.top_right_junction_character)
+        )
+
+    def __get_top_title_string(self) -> str:
+        columns_length = self.__get_formated_columns_length().values()
+        return (
+                self.style.top_left_junction_character
+                + self.style.horizontal_character.join(
+                    self.style.horizontal_character * length for length in columns_length
+                )
+                + self.style.top_right_junction_character
         )
 
     def __get_delimiter_string(self) -> str:
@@ -182,6 +219,7 @@ class Table:
         if self.min_table_width is not None and table_width < self.min_table_width:
             need_length = self.min_table_width - table_width
         elif self.max_table_width is not None and table_width > self.max_table_width:
+            table_width = sum(columns_length.values()) + len(columns_length) + 1
             need_length = self.max_table_width - table_width
         else:
             need_length = table_width - (sum(columns_length.values()) + len(columns_length) + 1)
