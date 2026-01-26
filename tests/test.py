@@ -1,20 +1,87 @@
+import pytest
+
 from src.simple_table_dima203 import Table, SINGLE_BORDER
 
 
 class TestTable:
     def test_table_print(self) -> None:
+        print()
         table = Table(keys=["name", "age"], style=SINGLE_BORDER)
-        table.none_format = '-'
-        table.min_table_width = 20
-        table.max_table_width = 30
-        table.max_width["age"] = 4
-        table.min_width["age"] = 4
-        table.align["name"] = "<"
-        table.add_row(["Alex gfjdkljgkdjklfgld", 22])
-        print(table)
         table.add_column("id", alias="tabel", default=0, align="<")
         table.min_width["id"] = 5
         table.add_row(["User", 13, 2])
         table.add_delimiter()
-        table.add_row(["Average", 17.5, ""])
+        table.add_row(["Average", 17.5, None])
         print(table)
+
+    def test_empty_table_print(self) -> None:
+        table = Table(style=SINGLE_BORDER)
+        assert str(table) == ("┌┐\n"
+                              "├┤\n"
+                              "└┘")
+
+    def test_table_without_data_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        assert str(table) == ("┌────┬───┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_data_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_row(["Alex gfjdkljgkdjklfgld", 22])
+        assert str(table) == ("┌──────────────────────┬───┐\n"
+                              "│         name         │age│\n"
+                              "├──────────────────────┼───┤\n"
+                              "│Alex gfjdkljgkdjklfgld│22 │\n"
+                              "└──────────────────────┴───┘")
+
+    def test_table_min_width_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.min_table_width = 20
+        assert str(table) == ("┌──────────┬───────┐\n"
+                              "│   name   │  age  │\n"
+                              "├──────────┼───────┤\n"
+                              "└──────────┴───────┘")
+
+    def test_table_with_inline_title_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.inline_title = "TEST"
+        assert str(table) == ("┌──TEST──┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_left_inline_title_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.inline_title = "TEST"
+        table.inline_title_align = "<"
+        assert str(table) == ("┌─TEST───┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_right_inline_title_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.inline_title = "TEST"
+        table.inline_title_align = ">"
+        assert str(table) == ("┌───TEST─┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_wrong_inline_title_align_error(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.inline_title = "TEST"
+        table.inline_title_align = ""
+        with pytest.raises(ValueError) as e_info:
+            print(table)
+
+
+    def test_table_with_large_inline_title_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.inline_title = "TESTING TABLE"
+        assert str(table) == ("┌─TESTING TABLE─┐\n"
+                              "│  name  │ age  │\n"
+                              "├────────┼──────┤\n"
+                              "└────────┴──────┘")

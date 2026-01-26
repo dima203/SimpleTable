@@ -8,13 +8,18 @@ class Table:
     def __init__(self, *, keys: list[str] | None = None, style: TableStyle = DEFAULT) -> None:
         self.__data: list[dict[str, Any] | str] = []
 
+        self.title: Any | None = None
+        self.inline_title: Any | None = None
+        self.title_align: str = "^"
+        self.inline_title_align: str = "^"
+
         self.keys: list[str] = [] if keys is None else keys
         self.key_alias: dict[str, str] = {key: key for key in self.keys}
 
-        self.align: dict[str, str] = {key: "^" for key in keys}
+        self.align: dict[str, str] = {key: "^" for key in self.keys}
 
-        self.min_width: dict[str, int | None] = {key: None for key in keys}
-        self.max_width: dict[str, int | None] = {key: None for key in keys}
+        self.min_width: dict[str, int | None] = {key: None for key in self.keys}
+        self.max_width: dict[str, int | None] = {key: None for key in self.keys}
 
         self.max_table_width: int | None = None
         self.min_table_width: int | None = None
@@ -51,13 +56,36 @@ class Table:
 
     def __str__(self) -> str:
         strings = [
-            self.__get_top_delimiter_string(),
+            self.__get_inline_title_string(),
             *self.__get_header_string(),
             self.__get_delimiter_string(),
             *self.__get_table_strings(),
             self.__get_bottom_delimiter_string(),
         ]
         return "\n".join(strings)
+
+    def __get_inline_title_string(self) -> str:
+        if self.inline_title is None:
+            return self.__get_top_delimiter_string()
+
+        delimiter_string = self.__get_top_delimiter_string()
+        delimiter_string = list(delimiter_string)
+
+        if self.inline_title_align == "<":
+            offset = 0
+        elif self.inline_title_align == "^":
+            offset = (len(delimiter_string) - 4 - len(self.inline_title)) // 2
+        elif self.inline_title_align == ">":
+            offset = len(delimiter_string) - 4 - len(self.inline_title)
+        else:
+            raise ValueError(
+                f"Value inline_title_align must be \"<\", \"^\" or \">\". But given {repr(self.inline_title_align)}"
+            )
+
+        for i, char in enumerate(self.inline_title):
+            delimiter_string[i + 2 + offset] = char
+
+        return ''.join(delimiter_string)
 
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
@@ -105,7 +133,12 @@ class Table:
         columns_length = self.__get_formated_columns_length()
         row_data_strings = {key: self.__get_data_strings(data, columns_length[key]) for key, data in row.items()}
         strings = []
-        max_data_length = len(max(row_data_strings.values(), key=len))
+
+        if len(row_data_strings) == 0:
+            max_data_length = 0
+        else:
+            max_data_length = len(max(row_data_strings.values(), key=len))
+
         for i in range(max_data_length):
             string = ""
             for key, data in row_data_strings.items():
@@ -141,14 +174,17 @@ class Table:
             if self.min_width[key] is not None:
                 columns_length[key] = self.min_width[key]
 
-        table_width = sum(columns_length.values()) + len(columns_length) + 1
+        table_width = max(
+            sum(columns_length.values()) + len(columns_length) + 1,
+            len(self.inline_title) + 4 if self.inline_title is not None else 0
+        )
 
         if self.min_table_width is not None and table_width < self.min_table_width:
             need_length = self.min_table_width - table_width
         elif self.max_table_width is not None and table_width > self.max_table_width:
             need_length = self.max_table_width - table_width
         else:
-            need_length = 0
+            need_length = table_width - (sum(columns_length.values()) + len(columns_length) + 1)
 
         added_length = self.__get_added_columns_length(need_length, columns_length)
         return {key: columns_length[key] + added_length[key] for key in columns_length}
@@ -194,6 +230,9 @@ class Table:
         }
 
     def __get_max_length_for_column(self, column_name: str) -> int:
+        if len([row for row in self.__data if row != "-"]) == 0:
+            return len(column_name)
+
         max_data_length = len(
             str(
                 max(
