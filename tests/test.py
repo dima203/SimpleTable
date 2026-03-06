@@ -118,7 +118,7 @@ class TestTable:
         table = Table(keys=["name", "age"], style=SINGLE_BORDER)
         table.inline_title = "TEST"
         table.inline_title_align = ""
-        with pytest.raises(ValueError) as e_info:
+        with pytest.raises(ValueError):
             print(table)
 
 

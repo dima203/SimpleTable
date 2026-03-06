@@ -5,7 +5,9 @@ from .style import TableStyle, DEFAULT
 
 
 class Table:
-    def __init__(self, *, keys: list[str] | None = None, style: TableStyle = DEFAULT) -> None:
+    def __init__(
+        self, *, keys: list[str] | None = None, style: TableStyle = DEFAULT
+    ) -> None:
         self.__data: list[dict[str, Any] | str] = []
 
         self.title: Any | None = None
@@ -73,18 +75,29 @@ class Table:
         columns_length = self.__get_formated_columns_length().values()
         title_strings = []
         for string in self.title.split("\n"):
-            title_strings.extend(self.__get_data_strings(string, sum(columns_length) + len(self.keys) - 1))
+            title_strings.extend(
+                self.__get_data_strings(
+                    string, sum(columns_length) + len(self.keys) - 1
+                )
+            )
 
         if self.title_border:
             return [
                 self.__get_top_title_string(),
-                *(f"{self.style.vertical_character}"
-                f"{title_string: {self.title_align}{sum(columns_length)+len(self.keys)-1}}"
-                f"{self.style.vertical_character}" for title_string in title_strings)
+                *(
+                    f"{self.style.vertical_character}"
+                    f"{title_string: {self.title_align}{sum(columns_length) + len(self.keys) - 1}}"
+                    f"{self.style.vertical_character}"
+                    for title_string in title_strings
+                ),
             ]
         else:
-            return [*(f" {title_string: {self.title_align}{sum(columns_length)+len(self.keys)-1}} "
-                      for title_string in title_strings)]
+            return [
+                *(
+                    f" {title_string: {self.title_align}{sum(columns_length) + len(self.keys) - 1}} "
+                    for title_string in title_strings
+                )
+            ]
 
     def __get_inline_title_string(self) -> str:
         if self.inline_title is None:
@@ -103,7 +116,7 @@ class Table:
             offset = len(delimiter_string) - 4 - len(self.inline_title)
         else:
             raise ValueError(
-                f"Value inline_title_align must be \"<\", \"^\" or \">\". But given {repr(self.inline_title_align)}"
+                f'Value inline_title_align must be "<", "^" or ">". But given {repr(self.inline_title_align)}'
             )
 
         for i, char in enumerate(self.inline_title):
@@ -112,26 +125,34 @@ class Table:
 
             delimiter_string[i + 2 + offset] = char
 
-        return ''.join(delimiter_string)
+        return "".join(delimiter_string)
 
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-            (self.style.left_junction_character if self.title_border else self.style.top_left_junction_character)
+            (
+                self.style.left_junction_character
+                if self.title_border
+                else self.style.top_left_junction_character
+            )
             + self.style.top_junction_character.join(
                 self.style.horizontal_character * length for length in columns_length
             )
-            + (self.style.right_junction_character if self.title_border else self.style.top_right_junction_character)
+            + (
+                self.style.right_junction_character
+                if self.title_border
+                else self.style.top_right_junction_character
+            )
         )
 
     def __get_top_title_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
-                self.style.top_left_junction_character
-                + self.style.horizontal_character.join(
-                    self.style.horizontal_character * length for length in columns_length
-                )
-                + self.style.top_right_junction_character
+            self.style.top_left_junction_character
+            + self.style.horizontal_character.join(
+                self.style.horizontal_character * length for length in columns_length
+            )
+            + self.style.top_right_junction_character
         )
 
     def __get_delimiter_string(self) -> str:
@@ -168,7 +189,10 @@ class Table:
 
     def __get_row_strings(self, row: dict[str, Any]) -> list[str]:
         columns_length = self.__get_formated_columns_length()
-        row_data_strings = {key: self.__get_data_strings(data, columns_length[key]) for key, data in row.items()}
+        row_data_strings = {
+            key: self.__get_data_strings(data, columns_length[key])
+            for key, data in row.items()
+        }
         strings = []
 
         if len(row_data_strings) == 0:
@@ -183,13 +207,13 @@ class Table:
                 if index >= 0:
                     string += f"{self.style.vertical_character}{data[index]: {self.align[key]}{columns_length[key]}}"
                 else:
-                    string += f"{self.style.vertical_character}{"": {self.align[key]}{columns_length[key]}}"
+                    string += f"{self.style.vertical_character}{'': {self.align[key]}{columns_length[key]}}"
             string += self.style.vertical_character
             strings.append(string)
         return strings
 
     def __get_data_strings(self, data: Any, length: int) -> list[str]:
-        return self.__format_data(data, length).split('\n')
+        return self.__format_data(data, length).split("\n")
 
     def __format_data(self, data: Any, length: int) -> str:
         return self.__format_length(self.__format_none(data), length)
@@ -213,7 +237,7 @@ class Table:
 
         table_width = max(
             sum(columns_length.values()) + len(columns_length) + 1,
-            len(self.inline_title) + 4 if self.inline_title is not None else 0
+            len(self.inline_title) + 4 if self.inline_title is not None else 0,
         )
 
         if self.min_table_width is not None and table_width < self.min_table_width:
@@ -222,16 +246,20 @@ class Table:
             table_width = sum(columns_length.values()) + len(columns_length) + 1
             need_length = self.max_table_width - table_width
         else:
-            need_length = table_width - (sum(columns_length.values()) + len(columns_length) + 1)
+            need_length = table_width - (
+                sum(columns_length.values()) + len(columns_length) + 1
+            )
 
         added_length = self.__get_added_columns_length(need_length, columns_length)
         return {key: columns_length[key] + added_length[key] for key in columns_length}
 
-    def __get_added_columns_length(self, need_length: int, current_length: dict[str, int]) -> dict[str, int]:
+    def __get_added_columns_length(
+        self, need_length: int, current_length: dict[str, int]
+    ) -> dict[str, int]:
         allocations = {key: 0 for key in current_length}
         weights = current_length.copy()
         total_weight = sum(weights.values())
-        is_growth = True if need_length >= 0 else False  # Нужно увеличить или уменьшить размер таблицы
+        is_growth = need_length >= 0  # Нужно увеличить или уменьшить размер таблицы
 
         for _ in range(abs(need_length)):
             for key in weights:
@@ -263,9 +291,7 @@ class Table:
         return allocations
 
     def __get_max_columns_length(self) -> dict[str, int]:
-        return {
-            key: self.__get_max_length_for_column(key) for key in self.keys
-        }
+        return {key: self.__get_max_length_for_column(key) for key in self.keys}
 
     def __get_max_length_for_column(self, column_name: str) -> int:
         if len([row for row in self.__data if row != "-"]) == 0:
@@ -275,7 +301,7 @@ class Table:
             str(
                 max(
                     [row for row in self.__data if row != "-"],
-                    key=lambda row: len(str(row[column_name])) if row != "-" else 0
+                    key=lambda row: len(str(row[column_name])) if row != "-" else 0,
                 )[column_name]
             )
         )

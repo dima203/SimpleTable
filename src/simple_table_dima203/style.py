@@ -19,8 +19,8 @@ class TableStyle:
 DEFAULT = TableStyle()
 
 SINGLE_BORDER = TableStyle(
-    vertical_character = "│",
-    horizontal_character = "─",
+    vertical_character="│",
+    horizontal_character="─",
     junction_character="┼",
     top_junction_character="┬",
     bottom_junction_char="┴",
@@ -33,8 +33,8 @@ SINGLE_BORDER = TableStyle(
 )
 
 DOUBLE_BORDER = TableStyle(
-    vertical_character = "║",
-    horizontal_character = "═",
+    vertical_character="║",
+    horizontal_character="═",
     junction_character="╬",
     top_junction_character="╦",
     bottom_junction_char="╩",
