@@ -12,9 +12,11 @@ class Table:
 
         self.title: Any | None = None
         self.inline_title: Any | None = None
+        self.subtitle: Any | None = None
         self.title_border: bool = False
         self.title_align: str = "^"
         self.inline_title_align: str = "^"
+        self.subtitle_align: str = "^"
 
         self.keys: list[str] = [] if keys is None else keys
         self.key_alias: dict[str, str] = {key: key for key in self.keys}
