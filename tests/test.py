@@ -1,15 +1,16 @@
 import pytest
 
-from src.simple_table_dima203 import Table, SINGLE_BORDER
+from src.simple_table_dima203 import Table, SINGLE_BORDER, CLEAR
 
 
 class TestTable:
     def test_table_print(self) -> None:
         print()
-        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table = Table(keys=["name", "age"], style=CLEAR)
         table.title = "User Ages for Admins"
-        table.inline_title = "Test Table"
-        table.title_border = False
+        table.inline_title = "Test"
+        table.supertitle = "Test"
+        table.title_border = True
         table.min_table_width = 20
         table.min_width["id"] = 5
         table.add_row(["User", 13])
@@ -135,6 +136,65 @@ class TestTable:
         table.inline_title = "TESTING TABLE"
         table.max_table_width = 10
         assert str(table) == ("┌─TESTIN─┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_supertitle_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TEST"
+        assert str(table) == ("   TEST   \n"
+                              "┌────┬───┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_supertitle_with_border_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TEST"
+        table.title_border = True
+        assert str(table) == ("┌──TEST──┐\n"
+                              "├────┬───┤\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_large_supertitle_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TESTING TABLE"
+        assert str(table) == ("  TESTING TABLE  \n"
+                              "┌────────┬──────┐\n"
+                              "│  name  │ age  │\n"
+                              "├────────┼──────┤\n"
+                              "└────────┴──────┘")
+
+    def test_table_with_large_supertitle_with_border_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TESTING TABLE"
+        table.title_border = True
+        assert str(table) == ("┌─TESTING TABLE─┐\n"
+                              "├────────┬──────┤\n"
+                              "│  name  │ age  │\n"
+                              "├────────┼──────┤\n"
+                              "└────────┴──────┘")
+
+    def test_table_with_large_supertitle_with_max_table_width_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TESTING TABLE"
+        table.max_table_width = 10
+        assert str(table) == ("  TESTIN  \n"
+                              "┌────┬───┐\n"
+                              "│name│age│\n"
+                              "├────┼───┤\n"
+                              "└────┴───┘")
+
+    def test_table_with_large_supertitle_with_border_with_max_table_width_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.supertitle = "TESTING TABLE"
+        table.title_border = True
+        table.max_table_width = 10
+        assert str(table) == ("┌─TESTIN─┐\n"
+                              "├────┬───┤\n"
                               "│name│age│\n"
                               "├────┼───┤\n"
                               "└────┴───┘")

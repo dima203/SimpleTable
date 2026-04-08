@@ -12,11 +12,11 @@ class Table:
 
         self.title: Any | None = None
         self.inline_title: Any | None = None
-        self.subtitle: Any | None = None
+        self.supertitle: Any | None = None
         self.title_border: bool = False
         self.title_align: str = "^"
         self.inline_title_align: str = "^"
-        self.subtitle_align: str = "^"
+        self.supertitle_align: str = "^"
 
         self.keys: list[str] = [] if keys is None else keys
         self.key_alias: dict[str, str] = {key: key for key in self.keys}
@@ -61,6 +61,7 @@ class Table:
 
     def __str__(self) -> str:
         strings = [
+            *self.__get_supertitle_string(),
             *self.__get_title_string(),
             self.__get_inline_title_string(),
             *self.__get_header_string(),
@@ -85,7 +86,6 @@ class Table:
 
         if self.title_border:
             return [
-                self.__get_top_title_string(),
                 *(
                     f"{self.style.vertical_character}"
                     f"{title_string: {self.title_align}{sum(columns_length) + len(self.keys) - 1}}"
@@ -128,6 +128,40 @@ class Table:
             delimiter_string[i + 2 + offset] = char
 
         return "".join(delimiter_string)
+
+    def __get_supertitle_string(self) -> str | list[str]:
+        if self.supertitle is None:
+            if self.title_border:
+                return [self.__get_top_title_string()]
+            else:
+                return []
+
+        delimiter_string = self.__get_top_title_string()
+        if self.title_border:
+            delimiter_string = list(delimiter_string)
+        else:
+            delimiter_string = list(" " * len(delimiter_string))
+
+        if len(self.supertitle) > len(delimiter_string) - 4:
+            offset = 0
+        elif self.supertitle_align == "<":
+            offset = 0
+        elif self.supertitle_align == "^":
+            offset = (len(delimiter_string) - 4 - len(self.supertitle)) // 2
+        elif self.supertitle_align == ">":
+            offset = len(delimiter_string) - 4 - len(self.supertitle)
+        else:
+            raise ValueError(
+                f'Value inline_title_align must be "<", "^" or ">". But given {repr(self.supertitle_align)}'
+            )
+
+        for i, char in enumerate(self.supertitle):
+            if i + 2 + offset >= len(delimiter_string) - 2:
+                break
+
+            delimiter_string[i + 2 + offset] = char
+
+        return ["".join(delimiter_string)]
 
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
@@ -240,6 +274,7 @@ class Table:
         table_width = max(
             sum(columns_length.values()) + len(columns_length) + 1,
             len(self.inline_title) + 4 if self.inline_title is not None else 0,
+            len(self.supertitle) + 4 if self.supertitle is not None else 0,
         )
 
         if self.min_table_width is not None and table_width < self.min_table_width:
