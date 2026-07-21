@@ -15,7 +15,7 @@ class TestTable:
         table.max_table_width = 50
         table.min_width["name"] = 5
         table.max_width["name"] = 15
-        table.add_row(["Userjghjl;ghjlпат", 13])
+        table.add_row(["User", 13])
         table.add_row(["User2", 45])
         table.add_delimiter()
         table.add_row(["Average", 17.5])
