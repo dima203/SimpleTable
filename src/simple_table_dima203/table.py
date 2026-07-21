@@ -269,7 +269,9 @@ class Table:
         columns_length = self.__get_max_columns_length()
         for key, length in columns_length.items():
             if self.min_width[key] is not None:
-                columns_length[key] = self.min_width[key]
+                columns_length[key] = max(self.min_width[key], length)
+            if self.max_width[key] is not None:
+                columns_length[key] = min(self.max_width[key], columns_length[key])
 
         table_width = max(
             sum(columns_length.values()) + len(columns_length) + 1,
