@@ -1,12 +1,12 @@
 import pytest
 
-from src.simple_table_dima203 import Table, SINGLE_BORDER, DOUBLE_BORDER
+from src.simple_table_dima203 import Table, SINGLE_BORDER, DOUBLE_BORDER, DEFAULT
 
 
 class TestTable:
     def test_table_print(self) -> None:
         print()
-        table = Table(keys=["name", "age"], style=DOUBLE_BORDER)
+        table = Table(keys=["name", "age"], style=DEFAULT)
         table.title = "User Ages for Admins"
         table.inline_title = "Test"
         table.supertitle = "Test"
@@ -17,16 +17,47 @@ class TestTable:
         table.max_width["name"] = 15
         table.add_row(["User", 13])
         table.add_row(["User2", 45])
-        table.add_delimiter()
+        table.add_delimiter("Длинный текст для разделителя")
         table.add_row(["Average", 17.5])
         print(table)
 
     def test_empty_table_print(self) -> None:
         table = Table(style=SINGLE_BORDER)
         assert str(table) == (
-            "┌┐\n"
-            "├┤\n"
-            "└┘"
+            "┌─┐\n"
+            "│ │\n"
+            "├─┤\n"
+            "└─┘"
+        )
+
+    def test_empty_table_with_title_print(self) -> None:
+        table = Table(style=SINGLE_BORDER)
+        table.title = "Test"
+        assert str(table) == (
+            "  Test  \n"
+            "┌──────┐\n"
+            "│      │\n"
+            "├──────┤\n"
+            "└──────┘"
+        )
+
+    def test_empty_table_with_adding_new_column_print(self) -> None:
+        table = Table(style=SINGLE_BORDER)
+        table.title = "Test"
+        assert str(table) == (
+            "  Test  \n"
+            "┌──────┐\n"
+            "│      │\n"
+            "├──────┤\n"
+            "└──────┘"
+        )
+        table.add_column("Test")
+        assert str(table) == (
+            "  Test  \n"
+            "┌──────┐\n"
+            "│ Test │\n"
+            "├──────┤\n"
+            "└──────┘"
         )
 
     def test_table_without_data_print(self) -> None:
@@ -47,6 +78,30 @@ class TestTable:
             "├──────────────────────┼───┤\n"
             "│Alex gfjdkljgkdjklfgld│22 │\n"
             "└──────────────────────┴───┘"
+        )
+
+    def test_table_with_large_title_print(self) -> None:
+        table = Table(keys=["Fullname", "age"], style=SINGLE_BORDER)
+        table.add_row(["Alex", 22])
+        assert str(table) == (
+            "┌────────┬───┐\n"
+            "│Fullname│age│\n"
+            "├────────┼───┤\n"
+            "│  Alex  │22 │\n"
+            "└────────┴───┘"
+        )
+
+    def test_table_with_max_table_width_with_large_title_print(self) -> None:
+        table = Table(keys=["Fullname", "age"], style=SINGLE_BORDER)
+        table.add_row(["Alex", 22])
+        table.max_table_width = 10
+        assert str(table) == (
+            "┌─────┬──┐\n"
+            "│Fulln│ag│\n"
+            "│ ame │e │\n"
+            "├─────┼──┤\n"
+            "│Alex │22│\n"
+            "└─────┴──┘"
         )
 
     def test_table_min_width_print(self) -> None:
@@ -252,5 +307,82 @@ class TestTable:
             "├────┬───┤\n"
             "│name│age│\n"
             "├────┼───┤\n"
+            "└────┴───┘"
+        )
+
+    def test_table_with_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter()
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "├────┼───┤\n"
+            "└────┴───┘"
+        )
+
+    def test_table_with_text_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter("Test")
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "├─Test───┤\n"
+            "└────┴───┘"
+        )
+
+    def test_table_with_large_text_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter("Testing delimiter")
+        assert str(table) == (
+            "┌──────────┬────────┐\n"
+            "│   name   │  age   │\n"
+            "├──────────┼────────┤\n"
+            "├─Testing delimiter─┤\n"
+            "└──────────┴────────┘"
+        )
+
+    def test_table_with_max_table_width_with_large_text_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter("Testing delimiter")
+        table.max_table_width = 10
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "├─Testin─┤\n"
+            "└────┴───┘"
+        )
+
+    def test_table_with_multiple_text_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter("Test 1")
+        table.add_delimiter("Test 2")
+        table.add_delimiter("Test 3")
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "├─Test 1─┤\n"
+            "├─Test 2─┤\n"
+            "├─Test 3─┤\n"
+            "└────┴───┘"
+        )
+
+    def test_table_with_data_with_text_delimiter_print(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_delimiter("Test 1")
+        table.add_row(["Alex", 22])
+        table.add_delimiter()
+        table.add_row(["Dan", 25])
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "├─Test 1─┤\n"
+            "│Alex│22 │\n"
+            "├────┼───┤\n"
+            "│Dan │25 │\n"
             "└────┴───┘"
         )
