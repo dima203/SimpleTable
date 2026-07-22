@@ -1,5 +1,6 @@
 import textwrap
 from typing import Any
+from zipfile import sizeEndCentDir
 
 from .style import TableStyle, DEFAULT
 
@@ -53,13 +54,26 @@ class Table:
         for row in self.__data:
             row[column_name] = default
 
+    def delete_column(self, column_name: str) -> None:
+        self.keys.remove(column_name)
+        del self.key_alias[column_name]
+        del self.align[column_name]
+        del self.min_width[column_name]
+        del self.max_width[column_name]
+        for row in self.__data:
+            del row[column_name]
+
     def add_row(self, row: list[Any]) -> None:
         self.__data.append(dict(zip(self.keys, row)))
 
-    def add_delimiter(self) -> None:
-        self.__data.append("-")
+    def add_delimiter(self, text: str | None = None) -> None:
+        self.__data.append(text)
 
     def __str__(self) -> str:
+        is_empty = False
+        if len(self.keys) == 0:
+            self.add_column(" ")
+            is_empty = True
         strings = [
             *self.__get_supertitle_string(),
             *self.__get_title_string(),
@@ -69,6 +83,8 @@ class Table:
             *self.__get_table_strings(),
             self.__get_bottom_delimiter_string(),
         ]
+        if is_empty:
+            self.delete_column(" ")
         return "\n".join(strings)
 
     def __get_title_string(self) -> list[str]:
@@ -163,6 +179,21 @@ class Table:
 
         return ["".join(delimiter_string)]
 
+    def __get_text_delimiter_string(self, delimiter: str | None) -> str:
+        if delimiter is None:
+            return self.__get_delimiter_string()
+
+        delimiter_string = self.__get_delimiter_string()
+        delimiter_string = list(delimiter_string)
+
+        for i, char in enumerate(delimiter):
+            if i + 2 >= len(delimiter_string) - 2:
+                break
+
+            delimiter_string[i + 2] = char
+
+        return "".join(delimiter_string)
+
     def __get_top_delimiter_string(self) -> str:
         columns_length = self.__get_formated_columns_length().values()
         return (
@@ -217,8 +248,8 @@ class Table:
     def __get_table_strings(self) -> list[str]:
         strings = []
         for row in self.__data:
-            if row == "-":
-                strings.append(self.__get_delimiter_string())
+            if not isinstance(row, dict):
+                strings.append(self.__get_text_delimiter_string(row))
             else:
                 strings.extend(self.__get_row_strings(row))
         return strings
@@ -277,6 +308,8 @@ class Table:
             sum(columns_length.values()) + len(columns_length) + 1,
             len(self.inline_title) + 4 if self.inline_title is not None else 0,
             len(self.supertitle) + 4 if self.supertitle is not None else 0,
+            len(self.title) + 4 if self.title is not None else 0,
+            max(self.__get_delimiters_length()),
         )
 
         if self.min_table_width is not None and table_width < self.min_table_width:
@@ -333,20 +366,34 @@ class Table:
         return {key: self.__get_max_length_for_column(key) for key in self.keys}
 
     def __get_max_length_for_column(self, column_name: str) -> int:
-        if len([row for row in self.__data if row != "-"]) == 0:
+        if len([row for row in self.__data if isinstance(row, dict)]) == 0:
             return len(column_name)
 
         max_data_length = len(
             str(
                 max(
-                    [row for row in self.__data if row != "-"],
-                    key=lambda row: len(str(row[column_name])) if row != "-" else 0,
+                    [row for row in self.__data if isinstance(row, dict)],
+                    key=lambda row: len(str(row[column_name])) if isinstance(row, dict) else 0,
                 )[column_name]
             )
         )
         return (
             max_data_length if max_data_length >= len(column_name) else len(column_name)
         )
+
+    def __get_delimiters_length(self) -> list[int]:
+        result = [0]
+
+        for row in self.__data:
+            if isinstance(row, dict):
+                continue
+
+            if row is None:
+                result.append(0)
+            else:
+                result.append(len(row) + 4)
+
+        return result
 
     def __get_max_length(self) -> int:
         strings = self.__get_raw_strings()
