@@ -69,6 +69,22 @@ class TestTable:
             "└────┴───┘"
         )
 
+    def test_table_without_data_deleting_column(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        assert str(table) == (
+            "┌────┬───┐\n"
+            "│name│age│\n"
+            "├────┼───┤\n"
+            "└────┴───┘"
+        )
+        table.delete_column("age")
+        assert str(table) == (
+            "┌────┐\n"
+            "│name│\n"
+            "├────┤\n"
+            "└────┘"
+        )
+
     def test_table_with_data_print(self) -> None:
         table = Table(keys=["name", "age"], style=SINGLE_BORDER)
         table.add_row(["Alex gfjdkljgkdjklfgld", 22])
@@ -78,6 +94,25 @@ class TestTable:
             "├──────────────────────┼───┤\n"
             "│Alex gfjdkljgkdjklfgld│22 │\n"
             "└──────────────────────┴───┘"
+        )
+
+    def test_table_with_data_deleting_column(self) -> None:
+        table = Table(keys=["name", "age"], style=SINGLE_BORDER)
+        table.add_row(["Alex gfjdkljgkdjklfgld", 22])
+        assert str(table) == (
+            "┌──────────────────────┬───┐\n"
+            "│         name         │age│\n"
+            "├──────────────────────┼───┤\n"
+            "│Alex gfjdkljgkdjklfgld│22 │\n"
+            "└──────────────────────┴───┘"
+        )
+        table.delete_column("age")
+        assert str(table) == (
+            "┌──────────────────────┐\n"
+            "│         name         │\n"
+            "├──────────────────────┤\n"
+            "│Alex gfjdkljgkdjklfgld│\n"
+            "└──────────────────────┘"
         )
 
     def test_table_with_large_title_print(self) -> None:
