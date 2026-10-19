@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Simple package for fast work with tables"
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
